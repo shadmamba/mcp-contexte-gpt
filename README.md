@@ -224,8 +224,6 @@ npm test
 npm run check    # tests, vérification des types et build
 ```
 
-## Origine et licence
+## Origine
 
 Ce projet est dérivé de [chatgpt-context-mcp](https://github.com/protosskai/chatgpt-context-mcp), puis largement réécrit : prise en charge des projets ChatGPT, suivi de la branche affichée, troncature cohérente, support de Windows et nouvelle structure.
-
-Distribué sous licence MIT. Voir [LICENSE](./LICENSE).

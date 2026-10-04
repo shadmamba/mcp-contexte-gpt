@@ -1,0 +1,40 @@
+{
+  "name": "mcp-contexte-gpt",
+  "version": "0.1.0",
+  "description": "Serveur MCP local qui importe le contexte de conversations ChatGPT dans Claude Code, Cursor, Codex et les autres clients MCP",
+  "type": "module",
+  "bin": {
+    "mcp-contexte-gpt": "dist/src/main.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/main.ts",
+    "start": "node dist/src/main.js",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "check": "npm test && npm run typecheck && npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "chatgpt",
+    "claude-code",
+    "cursor",
+    "codex",
+    "context",
+    "typescript"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.5",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.14",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

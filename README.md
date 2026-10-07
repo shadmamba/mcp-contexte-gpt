@@ -59,11 +59,15 @@ Le serveur se lance avec `node <chemin-du-depot>/dist/src/main.js`.
 
 ## Configuration du token
 
-1. Ouvrez [chatgpt.com](https://chatgpt.com) dans votre navigateur, puis les outils de développement (F12), onglet Réseau.
-2. Rechargez la page et sélectionnez une requête vers `backend-api`.
-3. Copiez la valeur de l'en-tête `Authorization`, sans le préfixe `Bearer `.
+### Récupérer le token
+
+Connecté à ChatGPT dans votre navigateur, ouvrez [chatgpt.com/api/auth/session](https://chatgpt.com/api/auth/session) et copiez la valeur de `accessToken` (sans les guillemets).
+
+Autre méthode : ouvrez les outils de développement (F12), onglet Réseau, rechargez [chatgpt.com](https://chatgpt.com), sélectionnez une requête vers `backend-api` et copiez l'en-tête `Authorization`, sans le préfixe `Bearer `.
 
 Ne collez jamais ce token dans une conversation avec un agent, et ne le commitez jamais.
+
+### Créer le fichier du token (une seule fois)
 
 Au démarrage, le serveur lit un fichier d'environnement de secours. Les variables déjà définies dans l'environnement du processus restent prioritaires.
 
@@ -90,6 +94,30 @@ export CHATGPT_ACCOUNT_ID=""
 ```
 
 Le fichier accepte `export CLE="valeur"`, `CLE=valeur` et les commentaires `#`.
+
+### Renouveler le token
+
+Le token expire régulièrement (erreur `AUTH_TOKEN_EXPIRED`). Récupérez-en un nouveau, puis ouvrez le fichier pour remplacer l'ancien :
+
+**Windows (PowerShell)** :
+
+```powershell
+notepad "$env:USERPROFILE\.config\mcp-contexte-gpt\env"
+```
+
+**macOS / Linux** :
+
+```bash
+nano ~/.config/mcp-contexte-gpt/env
+```
+
+Collez le nouveau token entre les guillemets, en gardant ce format :
+
+```text
+export CHATGPT_BEARER_TOKEN="votre-nouveau-token"
+```
+
+Enregistrez, puis redémarrez le serveur dans votre client MCP (dans Cursor : Settings, MCP, désactiver puis réactiver `contexte-gpt`).
 
 ### Variables d'environnement
 
@@ -191,7 +219,7 @@ Le serveur n'écrit jamais le token sur le disque et ne l'inclut jamais dans ses
 
 **`verify_chatgpt_auth` échoue**
 - Vérifiez que `CHATGPT_BEARER_TOKEN` est bien défini, dans l'environnement ou dans le fichier `env`.
-- Le token expire régulièrement : récupérez-en un nouveau.
+- Le token expire régulièrement : voir [Renouveler le token](#renouveler-le-token).
 - Pour un compte Team ou Enterprise, renseignez `CHATGPT_ACCOUNT_ID`.
 - Redémarrez le client MCP après chaque changement.
 

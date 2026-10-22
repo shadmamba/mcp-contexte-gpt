@@ -6,11 +6,9 @@ Donnez une URL ChatGPT à votre agent : il récupère la conversation (plan, cod
 
 ## Avertissement
 
-Projet non officiel, sans lien avec OpenAI.
+Ce projet est destiné à un usage personnel : migration de contexte.
 
-Il utilise les API privées de l'application web ChatGPT. Elles ne sont pas documentées et peuvent changer, casser ou renvoyer des données incomplètes à tout moment. Ce projet est destiné à un usage personnel : migration de contexte et expérimentation MCP en local.
-
-Aucune garantie n'est donnée. Vous êtes responsable de votre usage : gestion du token, confidentialité des données, conditions d'utilisation de ChatGPT et politique de votre organisation. Le bearer token est un identifiant sensible : traitez-le comme un mot de passe.
+Vous êtes responsable de votre usage : Le bearer token est un identifiant sensible : traitez-le comme un mot de passe.
 
 ## Fonctionnalités
 
@@ -251,7 +249,3 @@ npm run dev      # lance le serveur depuis les sources
 npm test
 npm run check    # tests, vérification des types et build
 ```
-
-## Origine
-
-Ce projet est dérivé de [chatgpt-context-mcp](https://github.com/protosskai/chatgpt-context-mcp), puis largement réécrit : prise en charge des projets ChatGPT, suivi de la branche affichée, troncature cohérente, support de Windows et nouvelle structure.

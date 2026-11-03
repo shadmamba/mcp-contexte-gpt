@@ -33,7 +33,7 @@ src/mcp/instructions.ts             Instructions envoyées au client MCP
 src/mcp/tools/                      Un fichier par outil MCP
 src/providers/chatgpt/              url-parser, auth, chatgpt-client, shared-conversation, types
 src/rendering/                      conversation-messages, markdown-renderer, context-packer
-src/storage/                        cache-paths, conversation-store, cache-index, content-hash
+src/storage/                        cache-paths, workspace-cache, conversation-store, cache-index, content-hash
 src/shared/                         errors (AppError), format-date
 tests/                              Un fichier de test par module
 ```
@@ -60,7 +60,9 @@ Cette commande lance `npm test`, `npm run typecheck` et `npm run build`. Les tes
 
 ## Configuration locale
 
-Variables : `CHATGPT_BEARER_TOKEN`, `CHATGPT_ACCOUNT_ID`, `MCP_CONTEXTE_GPT_CACHE_DIR`, `MCP_CONTEXTE_GPT_ENV_FILE`.
+Variables : `CHATGPT_BEARER_TOKEN`, `CHATGPT_ACCOUNT_ID`, `MCP_CONTEXTE_GPT_CACHE_DIR`, `MCP_CONTEXTE_GPT_ENV_FILE`, `MCP_CONTEXTE_GPT_WORKSPACE`.
+
+Sans `MCP_CONTEXTE_GPT_CACHE_DIR`, le cache est `~/.cache/mcp-contexte-gpt/workspaces/<id>/`, un dossier par `cwd` (ou par `MCP_CONTEXTE_GPT_WORKSPACE`). Au démarrage, `prepareWorkspaceCache` supprime les caches dont le dossier de travail n'existe plus. `MCP_CONTEXTE_GPT_CACHE_DIR` désactive ce rangement et ce nettoyage.
 
 Fichier de secours par défaut : `~/.config/mcp-contexte-gpt/env`. Les variables déjà présentes dans l'environnement restent prioritaires.
 

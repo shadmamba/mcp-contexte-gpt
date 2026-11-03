@@ -123,7 +123,8 @@ Enregistrez, puis redémarrez le serveur dans votre client MCP (dans Cursor : Se
 | --- | --- |
 | `CHATGPT_BEARER_TOKEN` | Token de l'application web ChatGPT. |
 | `CHATGPT_ACCOUNT_ID` | Identifiant de compte, utile pour les comptes Team et Enterprise si la détection automatique échoue. |
-| `MCP_CONTEXTE_GPT_CACHE_DIR` | Dossier du cache (par défaut `~/.cache/mcp-contexte-gpt`). |
+| `MCP_CONTEXTE_GPT_CACHE_DIR` | Un seul dossier de cache pour tous les projets. S'il est défini, le rangement par dossier et le nettoyage automatique sont désactivés. |
+| `MCP_CONTEXTE_GPT_WORKSPACE` | Dossier du projet à rattacher au cache, si le client MCP ne le lance pas depuis ce dossier. |
 | `MCP_CONTEXTE_GPT_ENV_FILE` | Chemin d'un autre fichier d'environnement (par défaut `~/.config/mcp-contexte-gpt/env`). |
 
 ## Configuration des clients MCP
@@ -209,7 +210,22 @@ chatgpt://conversation/{conversation_id}/metadata
 
 ## Cache et confidentialité
 
-Les conversations importées sont enregistrées **en clair** dans `~/.cache/mcp-contexte-gpt/` (ou dans `MCP_CONTEXTE_GPT_CACHE_DIR`). Elles peuvent contenir des prompts privés, du code et d'autres données sensibles. Supprimez ce dossier pour effacer le cache.
+Les conversations importées sont enregistrées **en clair**, hors du dépôt Git, donc elles ne partent pas sur GitHub. Chaque dossier depuis lequel le client lance le serveur (Cursor, Claude Code, Codex, ou un autre client stdio) a son propre cache :
+
+```text
+~/.cache/mcp-contexte-gpt/workspaces/<identifiant-du-dossier>/
+  workspace.json
+  index.json
+  conversations/{conversation_id}/conversation.md
+```
+
+L'identifiant est calculé à partir du chemin du dossier. Les conversations importées depuis ce dossier y sont regroupées. Un autre dossier de travail reçoit un autre cache.
+
+Au démarrage, le serveur relit seulement ces marqueurs `workspace.json`. Si le dossier correspondant n'existe plus, son cache est supprimé. L'espace se libère à ce moment-là, au prochain lancement du MCP dans un projet encore ouvert. Déplacer ou renommer un projet compte comme un nouveau dossier : l'ancien cache est alors effacé de la même façon.
+
+`MCP_CONTEXTE_GPT_CACHE_DIR` remplace ce rangement par un dossier unique, qui n'est pas nettoyé automatiquement.
+
+Les imports déjà présents dans `~/.cache/mcp-contexte-gpt/conversations/` datent de l'ancien rangement. Ils restent sur le disque, mais ne sont plus listés : réimportez l'URL depuis le projet voulu pour les y rattacher.
 
 Le serveur n'écrit jamais le token sur le disque et ne l'inclut jamais dans ses réponses.
 

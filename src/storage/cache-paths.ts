@@ -1,5 +1,6 @@
-import path from "node:path";
 import os from "node:os";
+import path from "node:path";
+import { getWorkspacePath, workspaceCacheDir } from "./workspace-cache.js";
 
 export interface ConversationCachePaths {
   root: string;
@@ -10,8 +11,15 @@ export interface ConversationCachePaths {
   metadata_path: string;
 }
 
+export function getCacheBase(): string {
+  return path.join(os.homedir(), ".cache", "mcp-contexte-gpt");
+}
+
+/** Explicit MCP_CONTEXTE_GPT_CACHE_DIR, otherwise one folder per workspace under the default base. */
 export function getCacheRoot(env: NodeJS.ProcessEnv = process.env): string {
-  return env.MCP_CONTEXTE_GPT_CACHE_DIR?.trim() || path.join(os.homedir(), ".cache", "mcp-contexte-gpt");
+  const override = env.MCP_CONTEXTE_GPT_CACHE_DIR?.trim();
+  if (override) return override;
+  return workspaceCacheDir(getCacheBase(), getWorkspacePath(env));
 }
 
 export function getIndexPath(cacheRoot = getCacheRoot()): string {

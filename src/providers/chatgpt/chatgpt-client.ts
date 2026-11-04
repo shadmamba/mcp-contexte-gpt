@@ -225,6 +225,104 @@ function createShareHeaders(env: NodeJS.ProcessEnv): Record<string, string> {
   }
 }
 
+export const PROJECT_CONVERSATION_PAGE_SIZE = 50;
+/** Safety stop for one project list. Hitting it marks the result incomplete and names only the conversations already listed. */
+export const MAX_PROJECT_CONVERSATIONS = 500;
+
+export interface ProjectConversationListItem {
+  id: string;
+  title: string;
+  create_time?: number | string | null;
+  update_time?: number | string | null;
+}
+
+export interface ProjectConversationList {
+  items: ProjectConversationListItem[];
+  /** False when the API reported more conversations than were listed, or the safety stop was reached. */
+  complete: boolean;
+  total: number | null;
+}
+
+export async function listProjectConversations(
+  projectId: string,
+  options: ChatgptClientOptions & { pageSize?: number; maxItems?: number } = {}
+): Promise<ProjectConversationList> {
+  const env = options.env ?? process.env;
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const tokenInfo = getTokenInfo(env);
+  const headers = createApiHeaders(tokenInfo.token, tokenInfo.account_id, { projectId });
+  const pageSize = options.pageSize && options.pageSize > 0 ? options.pageSize : PROJECT_CONVERSATION_PAGE_SIZE;
+  const maxItems = options.maxItems && options.maxItems > 0 ? options.maxItems : MAX_PROJECT_CONVERSATIONS;
+
+  const items: ProjectConversationListItem[] = [];
+  const seen = new Set<string>();
+  let cursor = 0;
+  let total: number | null = null;
+  let complete = true;
+
+  while (items.length < maxItems) {
+    const url =
+      `${API_BASE}/gizmos/${encodeURIComponent(projectId)}/conversations` +
+      `?cursor=${cursor}&limit=${pageSize}`;
+    const response = await fetchImpl(url, { headers });
+    if (response.status === 401 || response.status === 403) {
+      throw new AppError(
+        "AUTH_FAILED",
+        `ChatGPT rejected the project conversation list (${response.status}). Confirm the token, chatgpt-account-id, and project access.`
+      );
+    }
+    if (!response.ok) {
+      throw new AppError(
+        "REMOTE_REQUEST_FAILED",
+        `ChatGPT project conversation list failed (${response.status} ${response.statusText}).`
+      );
+    }
+
+    const payload = (await response.json()) as { items?: unknown; total?: unknown };
+    const page = Array.isArray(payload.items) ? payload.items : [];
+    if (typeof payload.total === "number") total = payload.total;
+
+    for (const entry of page) {
+      const item = normalizeProjectListItem(entry);
+      if (!item || seen.has(item.id)) continue;
+      seen.add(item.id);
+      items.push(item);
+      if (items.length >= maxItems) break;
+    }
+
+    const reachedTotal = total !== null && cursor + pageSize >= total;
+    const shortPage = page.length < pageSize;
+    if (page.length === 0 || shortPage || reachedTotal) break;
+    if (items.length >= maxItems) {
+      complete = total !== null && items.length >= total;
+      break;
+    }
+    cursor += pageSize;
+  }
+
+  if (total !== null && items.length < total) complete = false;
+  return { items, complete, total };
+}
+
+function normalizeProjectListItem(value: unknown): ProjectConversationListItem | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const row = value as Record<string, unknown>;
+  const id = typeof row.id === "string" ? row.id : typeof row.conversation_id === "string" ? row.conversation_id : undefined;
+  if (!id) return undefined;
+  const title = typeof row.title === "string" && row.title.trim() ? row.title : "Untitled";
+  return {
+    id,
+    title,
+    create_time: timeField(row.create_time),
+    update_time: timeField(row.update_time)
+  };
+}
+
+function timeField(value: unknown): number | string | null | undefined {
+  if (typeof value === "number" || typeof value === "string" || value === null) return value;
+  return undefined;
+}
+
 export async function verifyBackendAccess(options: ChatgptClientOptions = {}): Promise<boolean> {
   const env = options.env ?? process.env;
   const fetchImpl = options.fetchImpl ?? fetch;

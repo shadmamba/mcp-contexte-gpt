@@ -12,6 +12,7 @@ URLs prises en charge :
 https://chatgpt.com/c/{conversation_id}
 https://chatgpt.com/share/{share_id}
 https://chatgpt.com/share/e/{share_id}
+https://chatgpt.com/g/{project_slug}/project
 https://chatgpt.com/g/{project_slug}/c/{conversation_id}
 https://chatgpt.com/g/{project_slug}/shared/c/{conversation_id}?owner_user_id={owner_id}
 ```
@@ -20,8 +21,9 @@ https://chatgpt.com/g/{project_slug}/shared/c/{conversation_id}?owner_user_id={o
 
 - Partages : `backend-api/share/{share_id}`, token facultatif, mis en cache sous `share-{share_id}`.
 - Projets : `backend-api/conversations/{id}` avec l'en-tête `chatgpt-project-id`, plus `chatgpt-conv-owner-id` si `owner_user_id` est présent (obligatoire pour `/shared/c/`). Token obligatoire.
+- Page projet `/g/{slug}/project` : `import_chatgpt_project` liste `backend-api/gizmos/{projectId}/conversations` jusqu'au bout (plafond de sécurité 500, alors `list_complete: false`), puis importe chaque conversation. `covered` n'est présent que pour cet import du projet entier, et n'est vrai que si la liste est complète et que tout a été importé. Des URL de conversations collées une par une, ou `conversation_ids`, sont un choix de l'utilisateur : ne pas signaler les conversations laissées de côté. Pas de filtre « plus récentes » ni de recherche avant import.
 
-N'ajoutez pas d'export en masse, de téléchargement de pièces jointes ni d'automatisation du navigateur sans validation explicite de l'utilisateur.
+N'ajoutez pas d'export de tout l'historique du compte, de téléchargement de pièces jointes ni d'automatisation du navigateur sans validation explicite de l'utilisateur. Un projet que l'utilisateur désigne par son URL peut être listé et importé en entier.
 
 ## Structure
 
@@ -30,7 +32,7 @@ src/main.ts                         Point d'entrée (charge le fichier env, dém
 src/config/env-file.ts              Fichier d'environnement de secours
 src/mcp/server.ts                   Déclaration des outils et ressources MCP
 src/mcp/instructions.ts             Instructions envoyées au client MCP
-src/mcp/tools/                      Un fichier par outil MCP
+src/mcp/tools/                      Un fichier par outil MCP, dont import-chatgpt-project.ts
 src/providers/chatgpt/              url-parser, auth, chatgpt-client, shared-conversation, types
 src/rendering/                      conversation-messages, markdown-renderer, context-packer
 src/storage/                        cache-paths, workspace-cache, conversation-store, cache-index, content-hash

@@ -1,7 +1,7 @@
 import { AppError } from "../../shared/errors.js";
 
 export interface ParsedChatgptUrl {
-  kind: "private" | "share" | "project";
+  kind: "private" | "share" | "project" | "project_index";
   /** Conversation id for /c/ and /g/.../c/, or share id for /share/. */
   id: string;
   /** Stable cache key. Shares use `share-{id}` (Windows-safe). */
@@ -56,12 +56,15 @@ export function parseChatgptUrl(input: string): ParsedChatgptUrl {
     };
   }
 
+  const projectHome = parseProjectHomePath(parsed.origin, segments);
+  if (projectHome) return projectHome;
+
   const project = parseProjectConversationPath(parsed.origin, segments, parsed.searchParams);
   if (project) return project;
 
   throw new AppError(
     "UNSUPPORTED_URL",
-    "Only ChatGPT /c/{conversation_id}, /share/{share_id}, /share/e/{share_id}, /g/{project}/c/{conversation_id}, or /g/{project}/shared/c/{conversation_id}?owner_user_id={owner} URLs are supported."
+    "Only ChatGPT /c/{conversation_id}, /share/{share_id}, /share/e/{share_id}, /g/{project}/project, /g/{project}/c/{conversation_id}, or /g/{project}/shared/c/{conversation_id}?owner_user_id={owner} URLs are supported."
   );
 }
 
@@ -73,6 +76,23 @@ export function extractProjectId(slug: string): string | undefined {
   );
   if (dashed?.[1]) return dashed[1];
   return undefined;
+}
+
+function parseProjectHomePath(origin: string, segments: string[]): ParsedChatgptUrl | undefined {
+  if (segments[0] !== "g" || segments.length !== 3 || segments[2] !== "project" || !segments[1]) return undefined;
+
+  const projectId = extractProjectId(segments[1]);
+  if (!projectId) {
+    throw new AppError("UNSUPPORTED_URL", "ChatGPT project URL is missing a recognizable project id.");
+  }
+
+  return {
+    kind: "project_index",
+    id: projectId,
+    cacheId: projectId,
+    sourceUrl: `${origin}/g/${segments[1]}/project`,
+    projectId
+  };
 }
 
 function parseProjectConversationPath(

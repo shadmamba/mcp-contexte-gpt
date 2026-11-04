@@ -5,6 +5,7 @@ import { serializeError } from "../shared/errors.js";
 import { getConversationCachePaths } from "../storage/cache-paths.js";
 import { SERVER_INSTRUCTIONS } from "./instructions.js";
 import { getChatgptContext } from "./tools/get-chatgpt-context.js";
+import { importChatgptProject } from "./tools/import-chatgpt-project.js";
 import { importChatgptUrl } from "./tools/import-chatgpt-url.js";
 import { listChatgptImports } from "./tools/list-chatgpt-imports.js";
 import { verifyChatgptAuth } from "./tools/verify-chatgpt-auth.js";
@@ -32,6 +33,29 @@ export function createServer(): McpServer {
       }
     },
     async (args) => toolResult(importChatgptUrl(args))
+  );
+
+  server.registerTool(
+    "import_chatgpt_project",
+    {
+      title: "Import ChatGPT Project",
+      description:
+        "List every conversation in a ChatGPT project home URL (/g/{project}/project), then import all of them by default. " +
+        "covered is set only for this whole-project import: true when the list is complete and every listed conversation was imported. " +
+        "If covered is false, not_imported names what is missing (list_only, import_limit, or import_failed). Do not treat the project as fully covered. " +
+        "conversation_ids imports only the caller's choice and does not report the conversations left out. " +
+        "Specific conversation URLs belong to import_chatgpt_url, not this tool. " +
+        "mode list_only imports nothing and returns the full inventory. " +
+        "max_imports is an explicit cap, never a default, and the conversations left out are still named. " +
+        "Do not pre-filter by a text query; search with list_chatgpt_imports only after import.",
+      inputSchema: {
+        url: z.string().url(),
+        mode: z.enum(["import_all", "list_only"]).optional(),
+        conversation_ids: z.array(z.string().min(1)).optional(),
+        max_imports: z.number().int().positive().optional()
+      }
+    },
+    async (args) => toolResult(importChatgptProject(args))
   );
 
   server.registerTool(

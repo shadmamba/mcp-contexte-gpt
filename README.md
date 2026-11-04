@@ -12,7 +12,7 @@ Vous êtes responsable de votre usage : Le bearer token est un identifiant sensi
 
 ## Fonctionnalités
 
-- Import de conversations privées, de liens de partage publics et de conversations de projets ChatGPT.
+- Import de conversations privées, de liens de partage publics, de conversations de projets ChatGPT, et d'un projet entier via son URL `/project`.
 - Suit la branche affichée dans ChatGPT : si vous avez modifié un message ou régénéré une réponse, c'est la version visible qui est importée.
 - Rafraîchit le contenu distant à chaque import et ne réécrit le cache que si la conversation a changé.
 - Cache local en Markdown, JSON et liste de messages, consultable sans réseau.
@@ -25,6 +25,7 @@ Vous êtes responsable de votre usage : Le bearer token est un identifiant sensi
 https://chatgpt.com/c/{conversation_id}
 https://chatgpt.com/share/{share_id}
 https://chatgpt.com/share/e/{share_id}
+https://chatgpt.com/g/{project_slug}/project
 https://chatgpt.com/g/{project_slug}/c/{conversation_id}
 https://chatgpt.com/g/{project_slug}/shared/c/{conversation_id}?owner_user_id={owner_id}
 ```
@@ -35,12 +36,19 @@ Le domaine `chat.openai.com` est accepté pour tous ces chemins.
 | --- | --- | --- |
 | `/c/{id}` | Obligatoire | Conversation privée |
 | `/share/{id}`, `/share/e/{id}` | Facultatif | Mise en cache sous l'identifiant `share-{share_id}` |
+| `/g/{project_slug}/project` | Obligatoire | Page du projet : liste toutes ses conversations, puis les importe toutes par défaut |
 | `/g/{project_slug}/c/{id}` | Obligatoire | Conversation d'un projet ; `owner_user_id` facultatif |
 | `/g/{project_slug}/shared/c/{id}` | Obligatoire | Conversation partagée dans un projet ; `owner_user_id` obligatoire |
 
 `{project_slug}` doit commencer par l'identifiant du projet (`g-p-` suivi de 32 caractères hexadécimaux), tel qu'il apparaît dans la barre d'adresse de ChatGPT.
 
-Hors périmètre : export en masse de l'historique ou d'un projet, téléchargement des pièces jointes, images ou Canvas, automatisation du navigateur.
+Si vous collez vous-même quelques liens de conversations du projet, seules ces conversations sont importées. Les autres ne sont pas signalées : c'est votre choix.
+
+Une URL `/project` demande le projet entier. `import_chatgpt_project` récupère d'abord la liste complète (titre, URL, dates), puis importe chaque conversation. `covered: true` seulement si cette liste est complète et que chacune a été importée. Sinon, `not_imported` nomme celles qui manquent (`list_only`, `import_limit` ou `import_failed`), et il ne faut pas répondre comme si le projet entier avait été lu.
+
+`mode: "list_only"` renvoie cette liste sans rien importer. `conversation_ids` importe seulement les conversations choisies, sans signaler celles qui ont été laissées de côté. `max_imports` est un plafond explicite, jamais une valeur par défaut : les conversations au-delà restent nommées. La recherche texte se fait après l'import, avec `list_chatgpt_imports`.
+
+Hors périmètre : export de tout l'historique du compte, téléchargement des pièces jointes, images ou Canvas, automatisation du navigateur.
 
 ## Installation
 
@@ -192,7 +200,8 @@ dans cette conversation est déjà présent dans src/ ; sinon, applique-le.
 
 | Outil | Réseau | Rôle |
 | --- | --- | --- |
-| `import_chatgpt_url` | Oui | Récupère la conversation, met à jour le cache si elle a changé et renvoie le contexte. Paramètres : `url`, `format` (`markdown`, `messages` ou `json`), `max_chars` (30000 par défaut), `cache_policy` (`refresh` ou `cache_only`). |
+| `import_chatgpt_url` | Oui | Récupère une conversation, met à jour le cache si elle a changé et renvoie le contexte. Paramètres : `url`, `format` (`markdown`, `messages` ou `json`), `max_chars` (30000 par défaut), `cache_policy` (`refresh` ou `cache_only`). Une URL `/project` est refusée : utiliser `import_chatgpt_project`. |
+| `import_chatgpt_project` | Oui | Pour une URL `/g/{projet}/project` seulement. Liste tout, puis importe tout. `covered` n'existe que pour cet import du projet entier. `conversation_ids` importe un choix, sans signaler le reste. `list_only` n'importe rien. `max_imports` plafonne en nommant le reste. |
 | `get_chatgpt_context` | Non | Lit une conversation déjà importée. Pour un partage, utilisez `share-{share_id}` comme `conversation_id`. |
 | `list_chatgpt_imports` | Non | Liste les conversations en cache, avec une recherche texte facultative. |
 | `verify_chatgpt_auth` | Oui | Vérifie que le token est présent, non expiré et accepté par ChatGPT. |

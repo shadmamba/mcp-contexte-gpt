@@ -64,6 +64,12 @@ export interface ToolResult {
 
 export async function importChatgptUrl(input: ImportChatgptUrlInput): Promise<ToolResult> {
   const parsed = parseChatgptUrl(input.url);
+  if (parsed.kind === "project_index") {
+    throw new AppError(
+      "UNSUPPORTED_URL",
+      "A /g/{project}/project URL lists a whole project. Call import_chatgpt_project so every conversation is named. import_chatgpt_url imports one conversation."
+    );
+  }
   const format = input.format ?? "markdown";
   const maxChars = input.max_chars ?? 30000;
   const cachePolicy = input.cache_policy ?? "refresh";

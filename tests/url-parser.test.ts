@@ -46,7 +46,7 @@ describe("parseChatgptUrl", () => {
   it("rejects unsupported paths", () => {
     expect(() => parseChatgptUrl("https://chatgpt.com/g/abc123")).toThrow(AppError);
     expect(() => parseChatgptUrl("https://chatgpt.com/g/abc123")).toThrow(
-      /\/share\/e\/\{share_id\}, \/g\/\{project\}\/c\/\{conversation_id\}, or \/g\/\{project\}\/shared\/c\/\{conversation_id\}/
+      /\/g\/\{project\}\/project, \/g\/\{project\}\/c\/\{conversation_id\}/
     );
   });
 
@@ -76,6 +76,16 @@ describe("parseChatgptUrl", () => {
       sourceUrl: "https://chatgpt.com/g/g-p-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-proj/c/conv-2",
       projectId: "g-p-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
       ownerUserId: undefined
+    });
+  });
+
+  it("accepts a project home URL", () => {
+    expect(parseChatgptUrl("https://chatgpt.com/g/g-p-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-example/project")).toEqual({
+      kind: "project_index",
+      id: "g-p-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      cacheId: "g-p-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      sourceUrl: "https://chatgpt.com/g/g-p-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-example/project",
+      projectId: "g-p-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     });
   });
 
